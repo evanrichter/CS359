@@ -42,9 +42,9 @@ void addLeaf(Sprig* thisSprig, int key, int caliper){
 	Leaf* thisLeaf = thisSprig->firstLeaf;
 	
 	if (thisLeaf == NULL) {
-		Leaf* newLeaf = (Leaf*)malloc(sizeof(Leaf));
-		createLeaf(newLeaf, key, NULL, NULL, thisSprig);
-		thisSprig->firstLeaf = newLeaf;
+		thisLeaf = (Leaf*)malloc(sizeof(Leaf));
+		createLeaf(thisLeaf, key, NULL, NULL, thisSprig);
+		thisSprig->firstLeaf = thisLeaf;
 		return;
 	}
 	
@@ -53,16 +53,16 @@ void addLeaf(Sprig* thisSprig, int key, int caliper){
 		if (thisLeaf->nextLeaf != NULL) {
 			thisLeaf = thisLeaf->nextLeaf;
 		} else if (count == 2) {
-			//reached end of sprig, keys still smaller
+			//reached end of sprig, keys still smaller.
 			if (thisLeaf->childSprig == NULL) {
-				//make new sprig far right
-				Sprig* newSprig = (Sprig*)malloc(sizeof(Sprig));
-				createSprig(newSprig, thisSprig);
-				thisLeaf->childSprig = newSprig;
+				//split and promote, because no far right sprig available
+				splitPromote(thisLeaf, thisSprig, key, caliper);
+				
 			}
-			//add this key to far right sprig
+			//add this key to far right sprig because it exists
 			addLeaf(thisLeaf->childSprig, key, caliper);
 		} else {
+			//there is room in this sprig for a new leaf
 			Leaf* newLeaf = (Leaf*)malloc(sizeof(Leaf));
 			createLeaf(newLeaf, key, thisLeaf, NULL, thisSprig);
 			thisLeaf->nextLeaf = newLeaf;
@@ -83,11 +83,75 @@ void addLeaf(Sprig* thisSprig, int key, int caliper){
 		}
 		thisLeaf->nextLeaf = newLeaf;
 	}
-	//sprig is too full, split and promote the median
+	//sprig is too full,
 	else {
-		
+		splitPromote(thisLeaf, thisSprig, key, caliper);
 	}
 	return;
+}
+
+void splitPromote(Leaf* thisLeaf, Sprig* thisSprig, int key, int caliper) {
+	//new sprig
+	Sprig* newRightSprig = (Sprig*)malloc(sizeof(Sprig));
+	if (thisSprig->parentSprig == NULL) {
+		//need to make new sprig on top
+		Sprig* newTopSprig = (Sprig*)malloc(sizeof(Sprig));
+		newRightSprig->parentSprig = newTopSprig;
+		thisSprig->parentSprig = newTopSprig;
+	} else {
+		//need to incorporate with existing upper sprig
+		newRightSprig->parentSprig = thisSprig->parentSprig;
+	}
+	Leaf* newLeaf = (Leaf*)malloc(sizeof(Leaf));
+	if (thisLeaf->nextLeaf == NULL) {
+		//add leaf to end
+		createLeaf(newLeaf, key, thisLeaf, NULL, newRightSprig);
+		thisLeaf->nextLeaf = newLeaf;
+	} else {
+		createLeaf(newLeaf, key, thisLeaf->prevLeaf, thisLeaf, newRightSprig);
+		thisLeaf->prevLeaf->nextLeaf = newLeaf;
+		thisLeaf->prevLeaf = newLeaf;
+	}
+	//start at the rightmost Leaf
+	while (thisLeaf->nextLeaf != NULL) {
+		thisLeaf = thisLeaf->nextLeaf;
+	}
+	
+	//then move back to split
+	int count = caliper/2 - 1;
+	while (count > 0) {
+		//every leaf on this side of the split needs to reassociate
+		thisLeaf->currSprig = newRightSprig;
+		//newRightSprig needs to find its first leaf
+		newRightSprig->firstLeaf = thisLeaf;
+		thisLeaf = thisLeaf->prevLeaf;
+		count--;
+	}
+	//now thisLeaf is the median
+	thisLeaf->childSprig = newRightSprig;
+	
+	//separate from the right leaves
+	if (thisLeaf->nextLeaf != NULL) {
+		thisLeaf->nextLeaf->prevLeaf = NULL;
+		thisLeaf->nextLeaf = NULL;
+	}
+	
+	//bring this leaf up to the parentSprig
+	addLeaf(thisSprig->parentSprig, thisLeaf->key, caliper);
+	//find the leaf just before the one we just added up there
+	Leaf* currLeaf = thisSprig->parentSprig->firstLeaf;
+	while (currLeaf->key < thisLeaf->key) {
+		currLeaf = currLeaf->nextLeaf;
+	}
+	//currLeaf is now one step too far right...
+	if (currLeaf->prevLeaf != NULL) {
+		currLeaf->prevLeaf->childSprig = thisSprig;
+	} else {
+		currLeaf->currSprig->leftSprig = thisSprig;
+	}
+	
+	//free up the memory of the left behind leaf
+	free(thisLeaf);
 }
 
 //file reading from zyante 9.5
