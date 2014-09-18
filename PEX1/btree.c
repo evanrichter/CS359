@@ -118,7 +118,7 @@ void splitPromote(Leaf* thisLeaf, Sprig* thisSprig, int key, int caliper) {
 	}
 	
 	//then move back to split
-	int count = caliper/2 - 1;
+	int count = caliper/2;
 	while (count > 0) {
 		//every leaf on this side of the split needs to reassociate
 		thisLeaf->currSprig = newRightSprig;
@@ -143,13 +143,18 @@ void splitPromote(Leaf* thisLeaf, Sprig* thisSprig, int key, int caliper) {
 	while (currLeaf->key < thisLeaf->key) {
 		currLeaf = currLeaf->nextLeaf;
 	}
+	//give the promoted leaf the right child sprig
+	currLeaf->childSprig = newRightSprig;
 	//currLeaf is now one step too far right...
 	if (currLeaf->prevLeaf != NULL) {
 		currLeaf->prevLeaf->childSprig = thisSprig;
 	} else {
 		currLeaf->currSprig->leftSprig = thisSprig;
 	}
-	
+	//separate from the left leaf
+	if (thisLeaf->prevLeaf != NULL) {
+		thisLeaf->prevLeaf->nextLeaf = NULL;
+	}
 	//free up the memory of the left behind leaf
 	free(thisLeaf);
 }
