@@ -63,7 +63,6 @@ void addLeaf(Sprig* thisSprig, int key, int caliper){
 			//add this key to far right sprig
 			addLeaf(thisLeaf->childSprig, key, caliper);
 		} else {
-			//CHECK THIS!!!!
 			Leaf* newLeaf = (Leaf*)malloc(sizeof(Leaf));
 			createLeaf(newLeaf, key, thisLeaf, NULL, thisSprig);
 			thisLeaf->nextLeaf = newLeaf;
@@ -86,7 +85,7 @@ void addLeaf(Sprig* thisSprig, int key, int caliper){
 	}
 	//sprig is too full, split and promote the median
 	else {
-		//split and promote
+		
 	}
 	return;
 }
