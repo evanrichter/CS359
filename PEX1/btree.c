@@ -1,8 +1,8 @@
 /*
 *	Name:			Evan Richter
 *	Class:		Comp Sci 359
-*	Assignment:	Pex1 Prelim
-*	Date:			12 Sept 2014
+*	Assignment:	Pex1
+*	Date:			18 Sept 2014
 *
 *	Documentation:
 *			No cadet help.
