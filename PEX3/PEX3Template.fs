@@ -44,7 +44,11 @@ EXAMPLE USES: (makeSum (Variable "x") (Number 5.0)) returns Add(Variable "x", Nu
               (makeSum (Number 6.0) (Number 11.0)) returns Number 17.0
 *)
 let makeSum a1 a2 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1, a2 with
+    |Number n1, Number n2 -> Number ( n1 + n2 )
+    |s, Number n | Number n, s -> if n=0.0 then s
+                                  else Add(s, Number n)
+    |x,y -> Add(x,y)
 
 
 //------------------------------------------------------------------------------
@@ -59,7 +63,10 @@ EXAMPLE USES: makeDifference (Variable "x") (Number 5.0) returns Subtract(Variab
               makeDifference (Number 6.0) (Number 11.0) returns Number -5.0
 *)
 let makeDifference a1 a2 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1, a2 with
+    |Number n1, Number n2 -> Number ( n1 - n2 )
+    |s, Number n when n=0.0 -> s
+    |x, y -> Subtract(x,y)
 
 
 //------------------------------------------------------------------------------
@@ -77,8 +84,10 @@ EXAMPLE USES: (makeProduct (Variable "x") (Number 5.0)) returns Multiply(Variabl
               (makeProduct (Number 6.0) (Number 11.0)) returns Number 66.0
 *)
 let makeProduct a1 a2 =
-    raise (Pex3Exception("Not yet implemented."))
-
+    match a1, a2 with
+    |Number n1, Number n2 -> Number (n1 * n2)
+    |x, Number n | Number n, x when n = 1.0 -> x
+    |x,y -> Multiply(x, y)
 
 
 //------------------------------------------------------------------------------
@@ -96,9 +105,14 @@ EXAMPLE USES: (makeQuotient (Variable "x") (Number 5.0)) returns Divide(Variable
               (makeQuotient (Number 12.0) (Number 6.0)) returns Number 2.0
 *)
 let makeQuotient a1 a2 =
-    raise (Pex3Exception("Not yet implemented."))
-
-
+    match a1, a2 with
+    |x, Number n when n=1.0 -> x
+    |x, Number n when n=0.0 -> raise (Pex3Exception("Divide by zero!"))
+    |Number n, x when n=0.0 -> Number 0.0
+    |x, y when x=y -> Number 1.0
+    |Number n1, Number n2 -> Number (n1 / n2)
+    |x, Number n -> Divide(x, Number n)
+    |x, y -> Divide(x,y)
 
 
 //------------------------------------------------------------------------------
@@ -116,7 +130,12 @@ EXAMPLE USES: makePower (Variable "x") (Number 5.0) returns Power(Variable "x", 
               makePower (Number 2.0) (Number 5.0) returns Number 32.0
 *)
 let makePower a1 a2 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1, a2 with
+    |Number n, x when n=1.0 or n=0.0 -> Number n
+    |x, Number n when n=0.0 -> Number 1.0
+    |x, Number n when n=1.0 -> x
+    |Number n1, Number n2 -> Number (n1**n2)
+    |x, y -> Power(x, y)
 
 //------------------------------------------------------------------------------
 (*
@@ -130,7 +149,9 @@ EXAMPLE USES: makeSine (Variable "x")
               returns Number(0.0) or something REALLY close to 0.0
 *)
 let makeSine a1 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1 with
+    |Number n -> Number (sin n)
+    |x -> Sine(x)
 
 //------------------------------------------------------------------------------
 (*
@@ -142,7 +163,9 @@ EXAMPLE USES: makeCosine (Variable "x") returns Cosine(Variable "x")
               makeCosine (Number 1.5707963268) returns Number(0.0) or something REALLY close to 0.0
 *)
 let makeCosine a1 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1 with
+    |Number n -> Number (cos n)
+    |x -> Cosine(x)
 
 //------------------------------------------------------------------------------
 (*
@@ -154,7 +177,9 @@ EXAMPLE USES: makeTangent (Variable "x") returns Tangent(Variable "x")
               makeTangent (Number 3.14159265359) returns Number(0.0) or something REALLY close to 0.0
 *)
 let makeTangent a1 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1 with
+    |Number n -> Number (tan n)
+    |x -> Tangent(x)
 
 //------------------------------------------------------------------------------
 (*
@@ -166,7 +191,9 @@ EXAMPLE USES: makeLogarithm (Variable "x") returns Logarithm(Variable "x")
               makeLogarithm (Number 2.718281828) returns Number(1.0) or something REALLY close to 1.0
 *)
 let makeLogarithm a1 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1 with
+    |Number n -> Number (log n)
+    |x -> Logarithm(x)
 
 //------------------------------------------------------------------------------
 (*
@@ -175,23 +202,37 @@ PURPOSE: returns a new expression for the exponential of a1
 PRECONDITIONS: a1 is a valid expression
 POSTCONDITIONS: expression representing the exponential of a1 or reduced form if a1 is a number
 EXAMPLE USES: makeExponential (Variable "x") returns Exponential(Variable "x")
-              makeExponential (Number 1.0) returns Number(2.718281828) or something REALLY close to 2.718281828
+              makeExponential (Number 1.0) returns Number 2.718281828 or something REALLY close to 2.718281828
 *)
 let makeExponential a1 =
-    raise (Pex3Exception("Not yet implemented."))
+    match a1 with
+    |Number n -> Number (exp n)
+    |x -> Exponential(x)
 
 //------------------------------------------------------------------------------
 (*
 replace var value expr
 PURPOSE: replaces variable VAR with value VALUE in expression expr
-PRECONDITIONS: VAR is the variable of type string, VALUE is numeric value of type int,
+PRECONDITIONS: VAR is the variable of type string, VALUE is numeric value of type float,
                expr is an expression
 POSTCONDITIONS: returns the expr expression with VAR replaced by VALUE
 EXAMPLE USE: replace "x" 4.0 (Add(Variable "x", (Multiply(Number 3.0, Variable "x"))))
                 returns Add(Number 4.0, Multiply(Number 3.0, Number 4.0))
 *)
 let rec replace var value expr =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Number n -> Number n
+    |Variable s when s = var -> Number value
+    |Add(e1, e2)      -> makeSum (replace var value e1) (replace var value e2)
+    |Subtract(e1, e2) -> makeDifference (replace var value e1) (replace var value e2)
+    |Multiply(e1, e2) -> makeProduct (replace var value e1) (replace var value e2)
+    |Divide(e1, e2)   -> makeQuotient (replace var value e1) (replace var value e2)
+    |Power(e1, e2)    -> makePower (replace var value e1) (replace var value e2)
+    |Sine(e)          -> makeSine (replace var value e)
+    |Cosine(e)        -> makeCosine (replace var value e)
+    |Tangent(e)       -> makeTangent (replace var value e)
+    |Logarithm(e)     -> makeLogarithm (replace var value e)
+    |Exponential(e)   -> makeExponential (replace var value e)
 
 
 //-----------------------------------------------------------------------------
@@ -200,10 +241,22 @@ derivative expr var
 PURPOSE:  computes the symbolic derivative of some valid expression expr
 PRECONDITIONS: expr is an expression
 POSTCONDITIONS: returns expr differentiated with respect to var as an expression
-EXAMPLE USE: derivative (Add(Variable "x", Number 5.0)) "x";; returns 1.0
+EXAMPLE USE: derivative (Add(Variable "x", Number 5.0)) "x";; returns Number 1.0
 *)
 let rec derivative expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Number n -> Number 0.0
+    |Variable s when s = var -> derivativeVariable (Variable s) var
+    |Add(e1, e2)      -> makeSum (derivativeSum e1) (derivativeSum e2)
+    |Subtract(e1, e2) -> makeDifference (replace var value e1) (replace var value e2)
+    |Multiply(e1, e2) -> makeProduct (replace var value e1) (replace var value e2)
+    |Divide(e1, e2)   -> makeQuotient (replace var value e1) (replace var value e2)
+    |Power(e1, e2)    -> makePower (replace var value e1) (replace var value e2)
+    |Sine(e)          -> makeSine (replace var value e)
+    |Cosine(e)        -> makeCosine (replace var value e)
+    |Tangent(e)       -> makeTangent (replace var value e)
+    |Logarithm(e)     -> makeLogarithm (replace var value e)
+    |Exponential(e)   -> makeExponential (replace var value e)
 
 //-----------------------------------------------------------------------------
 (*
@@ -356,10 +409,22 @@ PURPOSE:  returns the string representation of the given expression in INFIX not
 PRECONDITIONS: expr is an expression
 POSTCONDITIONS: returns expr  as a fully-parenthesized string in INFIX notation
 EXAMPLE USES: toInfixString (Power(Number 6.0, Exponential(Variable "x")))
-              returns "(6^(exp(x)))"
+              returns "(6^(exp x))"
 *)
 let rec toInfixString expr =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Number n         -> sprintf "%.0f" n
+    |Variable s       -> s
+    |Add(e1, e2)      -> "(" + (toInfixString e1) + "+" + (toInfixString e2) + ")"
+    |Subtract(e1, e2) -> "(" + (toInfixString e1) + "-" + (toInfixString e2) + ")"
+    |Multiply(e1, e2) -> "(" + (toInfixString e1) + "*" + (toInfixString e2) + ")"
+    |Divide(e1, e2)   -> "(" + (toInfixString e1) + "/" + (toInfixString e2) + ")"
+    |Power(e1, e2)    -> "(" + (toInfixString e1) + "^" + (toInfixString e2) + ")"
+    |Sine(e)          -> "(sin " + (toInfixString e) + ")"
+    |Cosine(e)        -> "(cos " + (toInfixString e) + ")"
+    |Tangent(e)       -> "(tan " + (toInfixString e) + ")"
+    |Logarithm(e)     -> "(log " + (toInfixString e) + ")"
+    |Exponential(e)   -> "(exp " + (toInfixString e) + ")"
 
 
 //------------------------------------------------------------------------------
@@ -442,9 +507,293 @@ EXAMPLE USES: evaluateNthDerivativeInfix (Add( Multiply( Number 10.0, Power (Var
 let rec evaluateNthDerivativeInfix expr var value N =
     raise (Pex3Exception("Not yet implemented."))
 
+//Autograder
+//Place the contents of this file into your PEX3 template
+//It must go AFTER your last function and BEFORE the part that says [<EntryPoint>]
+//To use enter
+//autograde 0;;
+//at the F# interactive window command prompt
+
+let binaryMakeFunctionTestCases =
+    [
+        makeSum, (Variable "x",Number 0.0), Variable "x", "makeSum (Variable \"x\") (Number 0.0) failed to return Variable \"x\"";
+        makeSum, (Number 6.0, Number 8.0), Number 14.0, "makeSum (Number 6.0) (Number 8.0) failed to return (Number 14.0)";
+        makeDifference, (Number 3.0, Number 4.0), Number -1.0, "makeDifference (Number 3.0) (Number 4.0) failed to return (Number -1.0)"
+        makeDifference, (Number 0.0, Variable "x"), Subtract(Number 0.0, Variable "x"), "makeDifference (Number 0.0) (Variable \"x\") failed to return Subtract(Number 0.0, Variable \"x\")";
+        makeDifference, (Variable "x", Number 0.0), Variable "x", "makeDifference (Variable \"x\") (Number 0.0)  failed to return Variable \"x\")";
+        makeDifference, (Variable "x", Number 5.0), Subtract(Variable "x", Number 5.0), "makeDifference (Variable \"x\") (Number 5.0)  failed to return Subtract(Variable \"x\", Number 5.0)";
+        makeQuotient, (Number 3.0, Number 3.0), Number 1.0, "makeQuotient (Number 3.0) (Number 3.0) failed to return (Number 1.0)";
+        makeQuotient, (Variable "x", Variable "x"), Number 1.0, "makeQuotient (Variable \"x\") (Variable \"x\") failed to return (Number 1.0)";
+        makeQuotient, (Number 0.0, Variable "x"), Number 0.0, "makeQuotient (Number 0.0) (Variable \"x\") failed to return (Number 0.0)";
+        makeQuotient, (Variable "x", Number 5.0), Divide(Variable "x", Number 5.0), "makeQuotient (Variable \"x\") (Number 5.0) failed to return Divide(Variable \"x\", Number 5.0)";
+    ]
+
+let unaryMakeFunctionTestCases =
+    [
+        makeSine, Add(Variable "x", Number 5.0), Sine(Add(Variable "x", Number 5.0)), "makeSine (Add(Variable \"x\", Number 5.0)) failed to return Sine(Add(Variable \"x\", Number 5.0))";
+        makeCosine, Add(Variable "x", Number 5.0), Cosine(Add(Variable "x", Number 5.0)), "makeCosine (Add(Variable \"x\", Number 5.0)) failed to return Cosine(Add(Variable \"x\", Number 5.0))";
+        makeExponential, Add(Variable "x", Number 5.0), Exponential(Add(Variable "x", Number 5.0)), "makeExponential (Add(Variable \"x\", Number 5.0)) failed to return Exponential(Add(Variable \"x\", Number 5.0))";
+    ]
+
+let toInfixStringTestCases =
+    [
+        toInfixString, Variable "z", "z", "toInfixString (Variable \"z\") failed to return \"z\"";
+        toInfixString, Number 3.0, "3", "toInfixString (Variable \"z\") failed to return \"3\"";
+        toInfixString, Add(Variable "x", Variable "y"), "(x+y)", "toInfixString (Add(Variable \"x\", Variable \"y\")) failed to return \"(x+y)\"";
+        toInfixString, Subtract(Variable "x", Variable "y"), "(x-y)", "toInfixString (Subtract(Variable \"x\", Variable \"y\")) failed to return \"(x-y)\"";
+        toInfixString, Multiply(Variable "x", Variable "y"), "(x*y)", "toInfixString (Multiply(Variable \"x\", Variable \"y\")) failed to return \"(x*y)\"";
+        toInfixString, Power(Variable "x", Number 3.0), "(x^3)", "toInfixString (Power(Variable \"x\", Number 3.0) failed to return \"(x^3)\"";
+        toInfixString, Divide(Variable "x", Variable "y"), "(x/y)", "toInfixString (Divide(Variable \"x\", Variable \"y\")) failed to return \"(x/y)\"";
+        toInfixString, Sine(Add(Variable "x", Number 3.0)), "(sin (x+3))", "toInfixString (Sine(Add(Variable \"x\", Number 3.0))) failed to return \"(sin (x+3))\"";
+        toInfixString, Cosine(Multiply(Variable "x", Number 3.0)), "(cos (x*3))", "toInfixString (Cosine(Multiply(Variable \"x\", Number 3.0))) failed to return \"(cos (x*3))\"";
+        toInfixString, Logarithm(Divide(Variable "x", Number 3.0)), "(log (x/3))", "toInfixString (Logarithm(Divide(Variable \"x\", Number 3.0))) failed to return \"(log (x/3))\"";
+        toInfixString, Exponential(Power(Variable "x", Number 3.0)), "(exp (x^3))", "toInfixString (Exponential(Power(Variable \"x\", Number 3.0))) failed to return \"(exp (x^3))\"";
+        toInfixString,
+            Multiply(Add(Variable "x", Number 3.0), Cosine(Logarithm(Power(Variable "x", Variable "y" )))),
+            "((x+3)*(cos (log (x^y))))",
+            "toInfixString (Multiply(Add(Variable \"x\", Number 3.0), Cosine(Logarithm(Power(Variable \"x\", Variable \"y\" ))))) failed to return \"((x+3)*(cos (log (x^y))))\""
+
+    ]
+
+let derivativeTestCases =
+    [
+        derivative,
+            (Subtract(Number 3.0, Variable "x"), "x"),
+            Number -1.0,
+            "derivative (Subtract(Number 3.0, Variable \"x\")) \"x\" failed to return Number -1.0";
+        derivative,
+            (Subtract(Number 3.0, Variable "y"), "x"),
+            Number 0.0,
+            "derivative (Subtract(Number 3.0, Variable \"y\")) \"x\" failed to return Number 0.0";
+        derivative,
+            (Divide(Variable "x", Number 2.0), "x"),
+            Number 0.5,
+            "derivative (Subtract(Variable \"x\", Number 2.0)) \"x\" failed to return Number 0.5";
+        derivative,
+            (Divide(Variable "a", Variable "x"), "x"),
+            Divide(Subtract(Number 0.0, Variable "a"), Power(Variable "x", Number 2.0)),
+            "derivative (Divide(Variable \"a\", Variable \"x\")) \"x\"" +
+            " failed to return Divide(Subtract(Number 0.0, Variable \"a\"), Power(Variable \"a\", Number 2.0))";
+        derivative,
+            (Divide(Multiply(Number 3.0, Variable "x"), Multiply (Variable "a", Variable "x") ),"x"),
+            (Divide(Subtract(Multiply(Multiply(Variable "a", Variable "x"), Number 3.0),
+                             Multiply(Multiply(Number 3.0,Variable "x"),Variable "a")
+                            ),
+                    Power(Multiply(Variable "a",Variable "x"),Number 2.0)
+                    )
+            ),
+            "derivative (Divide(Multiply(Number 3.0, Variable \"x\"), Multiply (Variable \"a\", Variable \"x\") ) \"x\""+
+            " failed to return\n"+
+            "(Divide(Subtract(Multiply(Number 3.0,Multiply(Variable \"a\", Variable \"x\")),\n"+
+            "                 Multiply(Multiply(Number 3.0,Variable \"x\"),Variable \"a\")\n"+
+            "                ),\n"+
+            "        Power(Multiply(Variable \"a\",Variable \"x\"),Number 2.0)\n"+
+            "       )\n"+
+            ")";
+        derivative,
+            ((Sine(Variable "x")), "x"),
+            Cosine(Variable "x"),
+            "derivative (Sine(Variable \"x\")) \"x\" failed to return Cosine(Variable \"x\")";
+        derivative,
+            ((Sine(Divide(Variable "x", Variable "y"))), "x"),
+            Multiply(Cosine(Divide(Variable "x", Variable "y")),Divide(Variable "y", Power(Variable "y",Number 2.0))),
+            "derivative (Sine(Divide(Variable \"x\", Variable \"y\"))) \"x\" failed to return\n"+
+            "Multiply(Cosine(Divide(Variable \"x\", Variable \"y\")),Divide(Variable \"y\", Power(Variable \"y\",Number 2.0)))";
+        derivative,
+            ((Cosine(Variable "x")), "x"),
+            Subtract(Number 0.0, Sine(Variable "x")),
+            "derivative (Cosine(Variable \"x\")) \"x\" failed to return Subtract(Number 0.0, Sine(Variable \"x\"))";
+        derivative,
+            ((Cosine(Divide(Variable "x", Variable "y"))), "x"),
+            Multiply(Subtract(Number 0.0, Sine(Divide(Variable "x", Variable "y"))),Divide(Variable "y", Power(Variable "y",Number 2.0))),
+            "derivative (Cosine(Divide(Variable \"x\", Variable \"y\"))) \"x\" failed to return\n"+
+            "  Multiply\n"+
+            "    (Subtract (Number 0.0,Sine (Divide (Variable \"x\",Variable \"y\"))),\n"+
+            "     Divide (Variable \"y\",Power (Variable \"y\",Number 2.0)))";
+        derivative,
+            ((Tangent(Variable "x")), "x"),
+            Divide(Number 1.0, Power(Cosine(Variable "x"),Number 2.0)),
+            "derivative (Tangent(Variable \"x\")) \"x\" failed to return Divide(Number 1.0, Power(Cosine(Variable \"x\"),Number 2.0))";
+        derivative,
+            ( Tangent(Cosine(Multiply(Number 3.0, Power(Variable "x", Number 4.0)))) , "x"),
+            Multiply
+                (Divide
+                   (Number 1.0,
+                    Power
+                      (Cosine
+                         (Cosine (Multiply (Number 3.0,Power (Variable "x",Number 4.0)))),
+                       Number 2.0)),
+                 Multiply
+                   (Subtract
+                      (Number 0.0,
+                       Sine (Multiply (Number 3.0,Power (Variable "x",Number 4.0)))),
+                    Multiply
+                      (Number 3.0,Multiply (Number 4.0,Power (Variable "x",Number 3.0))))),
+            "derivative (Tangent(Cosine(Multiply(Number 3.0, Power(Variable \"x\", Number 4.0))))) \"x\"\n"+
+            "failed to return\n"+
+            "  Multiply\n"+
+            "   (Divide\n"+
+            "      (Number 1.0,\n"+
+            "       Power\n"+
+            "         (Cosine\n"+
+            "            (Cosine (Multiply (Number 3.0,Power (Variable \"x\",Number 4.0)))),\n"+
+            "          Number 2.0)),\n"+
+            "    Multiply\n"+
+            "       (Subtract\n"+
+            "          (Number 0.0,\n"+
+            "           Sine (Multiply (Number 3.0,Power (Variable \"x\",Number 4.0)))),\n"+
+            "        Multiply\n"+
+            "          (Number 3.0,Multiply (Number 4.0,Power (Variable \"x\",Number 3.0)))))";
+        derivative, ((Logarithm(Variable "x")), "x"), Divide(Number 1.0, Variable "x"),
+            "derivative (Logarithm(Variable \"x\")) \"x\" failed to return Divide(Number 1.0, Variable \"x\")";
+        derivative,
+            ( Logarithm(Cosine(Subtract(Variable "x",Number 3.0))), "x"),
+            Multiply
+                (Divide (Number 1.0,Cosine (Subtract (Variable "x",Number 3.0))),
+                    Subtract (Number 0.0,Sine (Subtract (Variable "x",Number 3.0)))),
+            "derivative ( Logarithm(Cosine(Subtract(Variable \"x\",Number 3.0)))) \"x\" failed to return\n"+
+            "  Multiply\n"+
+            "    (Divide (Number 1.0,Cosine (Subtract (Variable \"x\",Number 3.0))),\n"+
+            "     Subtract (Number 0.0,Sine (Subtract (Variable \"x\",Number 3.0))))";
+        derivative, ((Exponential(Variable "x")), "x"), Exponential(Variable "x"),
+            "derivative (Exponential(Variable \"x\")) \"x\" failed to return Exponential(Variable \"x\")";
+        derivative,
+            ((Exponential(Logarithm(Cosine(Multiply(Number 3.0, Variable "x"))))),"x"),
+            Multiply
+              (Exponential (Logarithm (Cosine (Multiply (Number 3.0,Variable "x")))),
+               Multiply
+                 (Divide (Number 1.0,Cosine (Multiply (Number 3.0,Variable "x"))),
+                  Multiply
+                    (Subtract (Number 0.0,Sine (Multiply (Number 3.0,Variable "x"))),
+                     Number 3.0))),
+            "derivative ((Exponential(Logarithm(Cosine(Multiply(Number 3.0, Variable \"x\")))))) \"x\"\n"+
+            "failed to return\n"+
+            "Multiply\n"+
+            "  (Exponential (Logarithm (Cosine (Multiply (Number 3.0,Variable \"x\")))),\n"+
+            "   Multiply\n"+
+            "     (Divide (Number 1.0,Cosine (Multiply (Number 3.0,Variable \"x\"))),\n"+
+            "      Multiply\n"+
+            "        (Subtract (Number 0.0,Sine (Multiply (Number 3.0,Variable \"x\"))),\n"+
+            "         Number 3.0)))";
+    ]
+
+let deivativeInfixTestCases =
+    [
+        derivativeInfix,
+            (Multiply(Logarithm(Power(Variable "x", Number 3.0)),Cosine(Divide(Variable "y",Variable "x"))), "x"),
+            "(((log (x^3))*((0-(sin (y/x)))*((0-y)/(x^2))))+((cos (y/x))*((1/(x^3))*(3*(x^2)))))",
+            "derivativeInfix\n"+
+            " (Multiply(Logarithm(Power(Variable \"x\", Number 3.0)),Cosine(Divide(Variable \"y\",Variable \"x\")))) \"x\"\n"+
+            "failed to return\n"+
+            "(((log (x^3))*((0-(sin (y/x)))*((0-y)/(x^2))))+((cos (y/x))*((1/(x^3))*(3*(x^2)))))"
+    ]
+
+let nthDerivativeInfixTestCases =
+    [
+        nthDerivativeInfix,
+            (Power(Variable "x", Number 5.0), "x", 2),
+            "(5*(4*(x^3)))",
+            "nthDerivativeInfix (Power(Variable \"x\", Number 5.0)) \"x\" 2 failed to return (5*(4*(x^3)))"
+    ]
+
+let evalDerivativeInfixTestCases =
+    [
+        evaluateDerivativeInfix,
+            (Power(Variable "x", Number 5.0), "x", 4.0),
+            "1280",
+            "WRONG!"
+    ]
+
+let evalNthDerivativeInfixTestCases =
+    [
+        evaluateNthDerivativeInfix,
+            (Power(Variable "x", Number 5.0), "x", 4.0, 3),
+            "960",
+            "evaluateNthDerivativeInfix (Power(Variable \"x\", Number 5.0)) \"x\" 4.0 3 failed to return \"960\"";
+        evaluateNthDerivativeInfix,
+            (Divide((Cosine(Logarithm(Power(Variable "x", Number 5.0))), Variable "x")), "x", 4.0, 3),
+            "0.613487206162668",
+            "evaluateNthDerivativeInfix (Divide((Cosine(Logarithm(Power(Variable \"x\", Number 5.0))), Variable \"x\"))) \"x\" 4.0 3\n"+
+            "failed to return \"0.613487206162668\""
+
+    ]
+
+let gradeUnaryTest f test desiredResult=
+    match test with
+        arg -> (f arg ) = desiredResult
+
+let gradeBinaryTest f test desiredResult=
+    match test with
+    arg1, arg2 -> (f arg1 arg2) = desiredResult
+
+
+let gradeTernaryTest f test desiredResult=
+    match test with
+    arg1, arg2, arg3 -> (f arg1 arg2 arg3) = desiredResult
+
+let gradeFournaryTest f test desiredResult=
+    match test with
+    arg1, arg2, arg3, arg4 -> (f arg1 arg2 arg3 arg4) = desiredResult
+
+let autograde dummyVar =
+    printfn "Checking for proper implementation of binary make functions..."
+    for (f, test, desiredResult, failureMsg) in binaryMakeFunctionTestCases do
+        try
+            if (not (gradeBinaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of unary make functions..."
+    for (f, test, desiredResult, failureMsg) in unaryMakeFunctionTestCases do
+        try
+            if (not (gradeUnaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of toInfixString..."
+    for (f, test, desiredResult, failureMsg) in toInfixStringTestCases do
+        try
+            if (not (gradeUnaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of derivative..."
+    for (f, test, desiredResult, failureMsg) in derivativeTestCases do
+        try
+            if (not (gradeBinaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of derivativeInfix..."
+    for (f, test, desiredResult, failureMsg) in deivativeInfixTestCases do
+        try
+            if (not (gradeBinaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of nthDerivativeInfix..."
+    for (f, test, desiredResult, failureMsg) in nthDerivativeInfixTestCases do
+        try
+            if (not (gradeTernaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of evalDerivativeInfix..."
+    for (f, test, desiredResult, failureMsg) in evalDerivativeInfixTestCases do
+        try
+            if (not (gradeTernaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+    printfn "\nChecking for proper implementation of evalNthDerivativeInfixTestCases..."
+    for (f, test, desiredResult, failureMsg) in evalNthDerivativeInfixTestCases do
+        try
+            if (not (gradeFournaryTest f test desiredResult)) then
+                printfn "ERROR: %s" failureMsg
+        with
+            | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
+
+
 [<EntryPoint>]
 let main argv =
     0 // return an integer exit code
-
-
-Add(Add(Multiply(Number 6.0,Power(Variable "x",Number 2.0)),Variable "x"),Number 3.0);;
