@@ -40,4 +40,6 @@ activity(n,o,add25Water,10).
 
 %defines the start and end event
 start(a).
-end(e).
+end(o).
+
+
