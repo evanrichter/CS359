@@ -58,7 +58,7 @@ PURPOSE: returns a new expression for a1 - a2
 PRECONDITIONS: a1 and a2 are valid expressions
 POSTCONDITIONS: expression representing a1 - a2 or reduced form
                 if either a2 is zero or both are numbers
-EXAMPLE USES: makeDifference (Variable "x") (Number 5.0) returns Subtract(Variable "x", Number 5)
+EXAMPLE USES: makeDifference (Variable "x") (Number 5.0) returns Subtract(Variable "x", Number 5.0)
               makeDifference (Variable "x") (Number 0.0) returns Variable "x"
               makeDifference (Number 6.0) (Number 11.0) returns Number -5.0
 *)
@@ -85,8 +85,9 @@ EXAMPLE USES: (makeProduct (Variable "x") (Number 5.0)) returns Multiply(Variabl
 *)
 let makeProduct a1 a2 =
     match a1, a2 with
-    |Number n1, Number n2 -> Number (n1 * n2)
+    |Number n1, Number n2 -> Number (n1 * n2 * 1.0)
     |x, Number n | Number n, x when n = 1.0 -> x
+    |x, Number n | Number n, x when n = 0.0 -> Number 0.0
     |x,y -> Multiply(x, y)
 
 
@@ -110,7 +111,7 @@ let makeQuotient a1 a2 =
     |x, Number n when n=0.0 -> raise (Pex3Exception("Divide by zero!"))
     |Number n, x when n=0.0 -> Number 0.0
     |x, y when x=y -> Number 1.0
-    |Number n1, Number n2 -> Number (n1 / n2)
+    |Number n1, Number n2 -> Number (n1 / n2 / 1.0)
     |x, Number n -> Divide(x, Number n)
     |x, y -> Divide(x,y)
 
@@ -134,7 +135,7 @@ let makePower a1 a2 =
     |Number n, x when n=1.0 or n=0.0 -> Number n
     |x, Number n when n=0.0 -> Number 1.0
     |x, Number n when n=1.0 -> x
-    |Number n1, Number n2 -> Number (n1**n2)
+    |Number n1, Number n2 -> Number (n1**n2 * 1.0)
     |x, y -> Power(x, y)
 
 //------------------------------------------------------------------------------
@@ -150,7 +151,7 @@ EXAMPLE USES: makeSine (Variable "x")
 *)
 let makeSine a1 =
     match a1 with
-    |Number n -> Number (sin n)
+    |Number n -> Number (1.0 * sin n)
     |x -> Sine(x)
 
 //------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ EXAMPLE USES: makeCosine (Variable "x") returns Cosine(Variable "x")
 *)
 let makeCosine a1 =
     match a1 with
-    |Number n -> Number (cos n)
+    |Number n -> Number (1.0 * cos n)
     |x -> Cosine(x)
 
 //------------------------------------------------------------------------------
@@ -178,7 +179,7 @@ EXAMPLE USES: makeTangent (Variable "x") returns Tangent(Variable "x")
 *)
 let makeTangent a1 =
     match a1 with
-    |Number n -> Number (tan n)
+    |Number n -> Number (1.0 * tan n)
     |x -> Tangent(x)
 
 //------------------------------------------------------------------------------
@@ -192,7 +193,7 @@ EXAMPLE USES: makeLogarithm (Variable "x") returns Logarithm(Variable "x")
 *)
 let makeLogarithm a1 =
     match a1 with
-    |Number n -> Number (log n)
+    |Number n -> Number (1.0 * log n)
     |x -> Logarithm(x)
 
 //------------------------------------------------------------------------------
@@ -206,7 +207,7 @@ EXAMPLE USES: makeExponential (Variable "x") returns Exponential(Variable "x")
 *)
 let makeExponential a1 =
     match a1 with
-    |Number n -> Number (exp n)
+    |Number n -> Number (1.0 * exp n)
     |x -> Exponential(x)
 
 //------------------------------------------------------------------------------
@@ -245,18 +246,18 @@ EXAMPLE USE: derivative (Add(Variable "x", Number 5.0)) "x";; returns Number 1.0
 *)
 let rec derivative expr var =
     match expr with
-    |Number n -> Number 0.0
-    |Variable s when s = var -> derivativeVariable (Variable s) var
-    |Add(e1, e2)      -> makeSum (derivativeSum e1) (derivativeSum e2)
-    |Subtract(e1, e2) -> makeDifference (replace var value e1) (replace var value e2)
-    |Multiply(e1, e2) -> makeProduct (replace var value e1) (replace var value e2)
-    |Divide(e1, e2)   -> makeQuotient (replace var value e1) (replace var value e2)
-    |Power(e1, e2)    -> makePower (replace var value e1) (replace var value e2)
-    |Sine(e)          -> makeSine (replace var value e)
-    |Cosine(e)        -> makeCosine (replace var value e)
-    |Tangent(e)       -> makeTangent (replace var value e)
-    |Logarithm(e)     -> makeLogarithm (replace var value e)
-    |Exponential(e)   -> makeExponential (replace var value e)
+    |Number n       -> Number 0.0
+    |Variable s     -> derivativeVariable expr var
+    |Add(a,b)       -> derivativeSum expr var
+    |Subtract(a,b)  -> derivativeDifference expr var
+    |Multiply(a,b)  -> derivativeProduct expr var
+    |Divide(a,b)    -> derivativeQuotient expr var
+    |Power(a,b)     -> derivativePower expr var
+    |Sine(a)        -> derivativeSine expr var
+    |Cosine(a)      -> derivativeCosine expr var
+    |Tangent(a)     -> derivativeTangent expr var
+    |Logarithm(a)   -> derivativeLogarithm expr var
+    |Exponential(a) -> derivativeExponential expr var
 
 //-----------------------------------------------------------------------------
 (*
@@ -269,7 +270,10 @@ EXAMPLE USE: derivativeVariable (Variable "a") "a"
              returns 1
 *)
 and derivativeVariable expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Variable s -> if s = var then Number 1.0
+                   else Number 0.0
+    |_ -> raise (Pex3Exception("Not a Variable"))
 
 //------------------------------------------------------------------------------
 (*
@@ -281,7 +285,9 @@ POSTCONDITIONS: returns expr differentiated with respect to var
 EXAMPLE USE: derivativeSum (Add(Variable "a", Variable "b")) "a" returns Number 1.0
 *)
 and derivativeSum expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Add(e1, e2) -> makeSum (derivative e1 var) (derivative e2 var)
+    |_ -> raise (Pex3Exception("Not a Sum"))
 
 
 //------------------------------------------------------------------------------
@@ -294,7 +300,9 @@ POSTCONDITIONS: returns expr differentiated with respect to var
 EXAMPLE USE: derivativeDifference (Subtract(Variable "a", Variable "b")) "a" returns Number 1.0
 *)
 and derivativeDifference expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Subtract(e1,e2) -> makeDifference (derivative e1 var) (derivative e2 var)
+    |_ -> raise (Pex3Exception("Not a Difference"))
 
 //------------------------------------------------------------------------------
 (*
@@ -306,7 +314,9 @@ POSTCONDITIONS: returns expr product with respect to var
 EXAMPLE USE: derivativeProduct (Multiply(Variable "a", Variable "b")) "a" returns Variable "b"
 *)
 and derivativeProduct expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Multiply(e1, e2) -> makeSum (makeProduct (derivative e1 var) e2) (makeProduct e1 (derivative e2 var))
+    |_ -> raise (Pex3Exception("Not a Product"))
 
 //------------------------------------------------------------------------------
 (*
@@ -320,7 +330,11 @@ EXAMPLE USES: derivativeQuotient (Divide(Variable "a", Variable "b")) "a"
 *)
 
 and derivativeQuotient expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    //quotient rule
+    |Divide(e1,e2) -> makeQuotient (makeDifference (makeProduct e2 (derivative e1 var)) (makeProduct (e1) (derivative e2 var)) )
+                                   (makePower e2 (Number 2.0))
+    |_ -> raise (Pex3Exception("Not a Quotient"))
 
 //------------------------------------------------------------------------------
 (*
@@ -333,7 +347,12 @@ EXAMPLE USES: derivativePower (Power(Variable "a", Number 4.0)) "a"
               returns Multiply (Number 4.0, Power(Variable "a", Number 3.0))
 *)
 and derivativePower expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    //Elementary Power Rule
+    |Power(e,Number n) -> makeProduct (makeProduct (Number n) (makePower e (makeDifference (Number n) (Number 1.0)))) (derivative e var)
+    //Generalized Power Rule, from Wikipedia "Differentiation Rules"
+    |Power(f,g) -> makeProduct expr (makeSum (makeProduct (derivative f var) (makeQuotient g f)) (makeProduct (derivative g var) (makeLogarithm f)))
+    |_ -> raise (Pex3Exception("Not a Power"))
 
 //------------------------------------------------------------------------------
 (*
@@ -346,7 +365,9 @@ EXAMPLE USES: derivativeSine (Sine(Multiply(Variable "a", Number 2.0))) "a"
               returns Multiply (Cosine (Multiply (Variable "a",Number 2.0)),Number 2.0)
 *)
 and derivativeSine expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Sine(e) -> makeProduct (makeCosine e) (derivative e var)
+    |_ -> raise (Pex3Exception("Not a Sine"))
 
 //------------------------------------------------------------------------------
 (*
@@ -359,7 +380,9 @@ EXAMPLE USES: derivativeCosine (Cosine(Multiply(Variable "a", Number 2.0))) "a"
               returns Subtract( Number 0.0, Multiply (Sine (Multiply (Variable "a",Number 2.0)),Number 2.0))
 *)
 and derivativeCosine expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Cosine(e) -> makeProduct (makeDifference (Number 0.0) (makeSine e)) (derivative e var)
+    |_ -> raise (Pex3Exception("Not a Cosine"))
 
 
 //------------------------------------------------------------------------------
@@ -373,7 +396,9 @@ EXAMPLE USES: derivativeTangent (Tangent(Variable "a")) "a"
               returns Divide(Number 1.0, Power(Cosine(Variable "a")), Number 2.0)
 *)
 and derivativeTangent expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Tangent(e) -> makeProduct (makeQuotient (Number 1.0) (makePower (makeCosine e) (Number 2.0))) (derivative e var)
+    |_ -> raise (Pex3Exception("Not a Tangent"))
 
 
 //------------------------------------------------------------------------------
@@ -387,7 +412,9 @@ EXAMPLE USES: derivativeLogarithm (Logarithm(Variable "a")) "a"
               returns Divide(Number 1.0, Variable "a")
 *)
 and derivativeLogarithm expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Logarithm(e) -> makeProduct (makeQuotient (Number 1.0) e) (derivative e var)
+    |_ -> raise (Pex3Exception("Not a Logarithm"))
 
 //------------------------------------------------------------------------------
 (*
@@ -400,7 +427,9 @@ EXAMPLE USES: derivativeExp (Exponential(Variable "a")) "a"
               returns Exponential(Variable "a")
 *)
 and derivativeExponential expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Exponential(e) -> makeProduct (expr) (derivative e var)
+    |_ -> raise (Pex3Exception("Not an Exponential"))
 
 //------------------------------------------------------------------------------
 (*
@@ -413,7 +442,8 @@ EXAMPLE USES: toInfixString (Power(Number 6.0, Exponential(Variable "x")))
 *)
 let rec toInfixString expr =
     match expr with
-    |Number n         -> sprintf "%.0f" n
+    |Number n         -> if (n % 1.0) > 0.0 then sprintf "%.15f" n
+                         else sprintf "%.0f" n
     |Variable s       -> s
     |Add(e1, e2)      -> "(" + (toInfixString e1) + "+" + (toInfixString e2) + ")"
     |Subtract(e1, e2) -> "(" + (toInfixString e1) + "-" + (toInfixString e2) + ")"
@@ -439,7 +469,7 @@ EXAMPLE USES: derivativeInfix (Power(Exponential(Variable "x"),  Number 6.0)) "x
               returns "(6*(((exp(x))^5)*(exp(x))))"
 *)
 let derivativeInfix expr var =
-    raise (Pex3Exception("Not yet implemented."))
+    toInfixString (derivative expr var)
 
 //------------------------------------------------------------------------------
 (*
@@ -458,7 +488,10 @@ EXAMPLE USES: nthDerivativeInfix (Add( Multiply( Number 5.0, Power(Variable "x" 
               returns "10"
 *)
 let rec nthDerivativeInfix expr var N =
-    raise (Pex3Exception("Not yet implemented."))
+    match N with
+    |0 -> toInfixString expr
+    |n -> nthDerivativeInfix (derivative expr var) var (n-1)
+    |_ -> raise(Pex3Exception("Can't take a negative Nth derivative"))
 
 
 
@@ -471,7 +504,19 @@ EXAMPLE USES: evaluate (Add( Multiply( Number 10.0, Number 3.0), Variable "x"))
               returns Add(Number 30.0, Variable "x")
 *)
 let rec evaluate expr =
-    raise (Pex3Exception("Not yet implemented."))
+    match expr with
+    |Number n         -> Number n
+    |Variable s       -> Variable s
+    |Add(e1, e2)      -> makeSum (evaluate e1) (evaluate e2)
+    |Subtract(e1, e2) -> makeDifference (evaluate e1) (evaluate e2)
+    |Multiply(e1, e2) -> makeProduct (evaluate e1) (evaluate e2)
+    |Divide(e1, e2)   -> makeQuotient (evaluate e1) (evaluate e2)
+    |Power(e1, e2)    -> makePower (evaluate e1) (evaluate e2)
+    |Sine(e)          -> makeSine (evaluate e)
+    |Cosine(e)        -> makeCosine (evaluate e)
+    |Tangent(e)       -> makeTangent (evaluate e)
+    |Logarithm(e)     -> makeLogarithm (evaluate e)
+    |Exponential(e)   -> makeExponential (evaluate e)
 
 
 //------------------------------------------------------------------------------
@@ -488,7 +533,7 @@ EXAMPLE USES: evaluateDerivativeInfix (Add( Multiply( Number 10.0, Power (Variab
               returns "20"
 *)
 let evaluateDerivativeInfix expr var value =
-    raise (Pex3Exception("Not yet implemented."))
+    toInfixString (replace var value (derivative expr var))
 
 //--------------------------------------------------------------------------------
 (*
@@ -505,7 +550,42 @@ EXAMPLE USES: evaluateNthDerivativeInfix (Add( Multiply( Number 10.0, Power (Var
               returns "120"
 *)
 let rec evaluateNthDerivativeInfix expr var value N =
-    raise (Pex3Exception("Not yet implemented."))
+    match N with
+    |1 -> evaluateDerivativeInfix expr var value
+    |n -> evaluateNthDerivativeInfix (derivative expr var) var value (n-1)
+    |_ -> raise(Pex3Exception("Can't take a negative Nth derivative"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Autograder
 //Place the contents of this file into your PEX3 template
@@ -568,12 +648,12 @@ let derivativeTestCases =
         derivative,
             (Divide(Variable "x", Number 2.0), "x"),
             Number 0.5,
-            "derivative (Subtract(Variable \"x\", Number 2.0)) \"x\" failed to return Number 0.5";
+            "derivative (Divide(Variable \"x\", Number 2.0)) \"x\" failed to return Number 0.5";
         derivative,
             (Divide(Variable "a", Variable "x"), "x"),
             Divide(Subtract(Number 0.0, Variable "a"), Power(Variable "x", Number 2.0)),
             "derivative (Divide(Variable \"a\", Variable \"x\")) \"x\"" +
-            " failed to return Divide(Subtract(Number 0.0, Variable \"a\"), Power(Variable \"a\", Number 2.0))";
+            " failed to return Divide(Subtract(Number 0.0, Variable \"a\"), Power(Variable \"x\", Number 2.0))";
         derivative,
             (Divide(Multiply(Number 3.0, Variable "x"), Multiply (Variable "a", Variable "x") ),"x"),
             (Divide(Subtract(Multiply(Multiply(Variable "a", Variable "x"), Number 3.0),
@@ -743,49 +823,49 @@ let autograde dummyVar =
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of unary make functions..."
+    printfn "Checking for proper implementation of unary make functions..."
     for (f, test, desiredResult, failureMsg) in unaryMakeFunctionTestCases do
         try
             if (not (gradeUnaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of toInfixString..."
+    printfn "Checking for proper implementation of toInfixString..."
     for (f, test, desiredResult, failureMsg) in toInfixStringTestCases do
         try
             if (not (gradeUnaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of derivative..."
+    printfn "Checking for proper implementation of derivative..."
     for (f, test, desiredResult, failureMsg) in derivativeTestCases do
         try
             if (not (gradeBinaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of derivativeInfix..."
+    printfn "Checking for proper implementation of derivativeInfix..."
     for (f, test, desiredResult, failureMsg) in deivativeInfixTestCases do
         try
             if (not (gradeBinaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of nthDerivativeInfix..."
+    printfn "Checking for proper implementation of nthDerivativeInfix..."
     for (f, test, desiredResult, failureMsg) in nthDerivativeInfixTestCases do
         try
             if (not (gradeTernaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of evalDerivativeInfix..."
+    printfn "Checking for proper implementation of evalDerivativeInfix..."
     for (f, test, desiredResult, failureMsg) in evalDerivativeInfixTestCases do
         try
             if (not (gradeTernaryTest f test desiredResult)) then
                 printfn "ERROR: %s" failureMsg
         with
             | Pex3Exception(exptMsg) -> printfn "EXCEPTION THROWN: %s\n%s" exptMsg failureMsg
-    printfn "\nChecking for proper implementation of evalNthDerivativeInfixTestCases..."
+    printfn "Checking for proper implementation of evalNthDerivativeInfixTestCases..."
     for (f, test, desiredResult, failureMsg) in evalNthDerivativeInfixTestCases do
         try
             if (not (gradeFournaryTest f test desiredResult)) then

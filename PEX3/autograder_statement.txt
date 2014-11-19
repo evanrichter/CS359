@@ -1,0 +1,13 @@
+Maj Ross,
+Sir,
+
+The autograder fails one test of derivativeInfix, as it should. However what it wants:
+"(((log (x^3))*((0-(sin (y/x)))*((0-y)/(x^2))))+((cos (y/x))*((1/(x^3))*(3*(x^2)))))"
+and what my method outputs:
+"((((1/(x^3))*(3*(x^2)))*(cos (y/x)))+((log (x^3))*((0-(sin (y/x)))*((0-y)/(x^2)))))"
+are arithmetically the same. I confirmed this with wolfram alpha, which reads infix notation better than me:
+http://www.wolframalpha.com/input/?i=%28%28%28log+%28x%5E3%29%29*%28%280-%28sin+%28y%2Fx%29%29%29*%28%280-y%29%2F%28x%5E2%29%29%29%29%2B%28%28cos+%28y%2Fx%29%29*%28%281%2F%28x%5E3%29%29*%283*%28x%5E2%29%29%29%29%29-%28%28%28%281%2F%28x%5E3%29%29*%283*%28x%5E2%29%29%29*%28cos+%28y%2Fx%29%29%29%2B%28%28log+%28x%5E3%29%29*%28%280-%28sin+%28y%2Fx%29%29%29*%28%280-y%29%2F%28x%5E2%29%29%29%29%29
+I subtracted what the autograder wants by my method's output. The result is 0.
+
+V/R,
+C2C Evan Richter
