@@ -1,3 +1,7 @@
+
+
+
+
 %path(A,B,Path) returns possible paths traversed to get from A to B
 path(A,A,[]).
 path(A,B,[Path]):-
@@ -7,14 +11,5 @@ path(A,B,[Head|Tail]):-
 	X \= B,               %is that next point the final destination? If not,
 	path(X,B,Tail).       %can I make a path from the intermediate point to
                               %the destination with the activities left?
-
-
-
-
-
-
-
-
-
 
 
