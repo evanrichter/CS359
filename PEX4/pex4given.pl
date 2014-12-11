@@ -30,11 +30,6 @@ time([Head|Tail],T):-
 	time(Tail,Later),
 	T is First + Later.
 
-contains([A],A).
-contains([Head|_],Head).
-contains([_|Tail],Item):-
-	contains(Tail,Item).
-
 % longer_path(A,B,length) returns true when there exists a path from A
 % to B that has time longer than length.
 longer_path(A,B,L):-
@@ -42,8 +37,20 @@ longer_path(A,B,L):-
 	time(Path, T),
 	T > L.
 
+% longest_path(A,B,Path) finds the longest path between two events
+longest_path(A,B,Path):-
+	event(A),
+	event(B),
+	path(A,B,Path),
+	time(Path,Length),
+	not(longer_path(A,B,Length)).
 
-
-
-
+% critical_path(Path,Length) returns the length of the longest path from
+% the first event to the last
+critical_path(Path,Length):-
+	start(A),
+	end(B),
+	path(A,B,Path),
+	time(Path,Length),
+	not(longer_path(A,B,Length)).
 

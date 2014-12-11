@@ -25,8 +25,10 @@ path(A,B,[Head|Tail]):-
 
 %time(List,Time) returns time of a list of activities
 time([],0).
+time([A],T):-
+	activity(_,_,A,T).
 time([Head|Tail],T):-
-	activity(_,_,Head,First),
+	time(Head,First),
 	time(Tail,Later),
 	T is First + Later.
 
@@ -45,3 +47,18 @@ critical_path(Path,Length):-
 	path(A,B,Path),
 	time(Path,Length),
 	not(longer_path(A,B,Length)).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
