@@ -23,7 +23,7 @@ path(A,B,[Head|Tail]):-
 	X \= B,
 	path(X,B,Tail).
 
-%time(List,Time) returns time of a list of events
+%time(List,Time) returns time of a list of activities
 time([],0).
 time([Head|Tail],T):-
 	activity(_,_,Head,First),
@@ -41,26 +41,6 @@ longer_path(A,B,L):-
 	path(A,B,Path),
 	time(Path, T),
 	T > L.
-
-
-
-%longer_path(A,B,L):-
-	%path(A,B,WrongPath),
-        %longer_path(A,B,[WrongPath],L).
-%longer_path(A,B,Paths,L):-
-	%path(A,B,UniquePath),
-	%not(contains(Paths,UniquePath)),
-	%time(UniquePath,T),
-	%T > L.
-%longer_path(A,B,Paths,L):-
-	%path(A,B,UniquePath),
-	%not(contains(Paths,UniquePath)),
-	%time(UniquePath,T),
-	%T @=< L,
-	%longer_path(A,B,[UniquePath|Paths],L).
-
-
-
 
 
 

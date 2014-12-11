@@ -44,20 +44,20 @@ longer_path(A,B,L):-
 
 
 
-longer_path(A,B,L):-
-	path(A,B,WrongPath),
-        longer_path(A,B,[WrongPath],L).
-longer_path(A,B,Paths,L):-
-	path(A,B,UniquePath),
-	not(contains(Paths,UniquePath)),
-	time(UniquePath,T),
-	T > L.
-longer_path(A,B,Paths,L):-
-	path(A,B,UniquePath),
-	not(contains(Paths,UniquePath)),
-	time(UniquePath,T),
-	T @=< L,
-	longer_path(A,B,[UniquePath|Paths],L).
+%longer_path(A,B,L):-
+	%path(A,B,WrongPath),
+        %longer_path(A,B,[WrongPath],L).
+%longer_path(A,B,Paths,L):-
+	%path(A,B,UniquePath),
+	%not(contains(Paths,UniquePath)),
+	%time(UniquePath,T),
+	%T > L.
+%longer_path(A,B,Paths,L):-
+	%path(A,B,UniquePath),
+	%not(contains(Paths,UniquePath)),
+	%time(UniquePath,T),
+	%T @=< L,
+	%longer_path(A,B,[UniquePath|Paths],L).
 
 
 
